@@ -23,6 +23,7 @@ export class AppController {
   registerPage() {
     return { message: 'Welcome to the register page' };
   }
+  
 
   @Post('/register')
   @HttpCode(200)
