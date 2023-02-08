@@ -1,6 +1,6 @@
 import { RegisterDTO } from './register.dto';
-import { BadRequestException, Body, Controller, Get, HttpCode, Param, Patch, Post, Redirect, Render, Session } from '@nestjs/common';
-import { DataSource, Repository, getRepository } from 'typeorm';
+import { BadRequestException, Body, Controller, Get, HttpCode, NotFoundException, Param, Patch, Post, Redirect, Render, Session } from '@nestjs/common';
+import { DataSource, Repository } from 'typeorm';
 import { Request, Response } from '@nestjs/common';
 import { AppService } from './app.service';
 import User from './user.entity';
@@ -19,7 +19,6 @@ export class AppController {
   index() {
     return { message: 'Welcome to the homepage' };
   }
-
   @Get('/logout')
   @Redirect()
   logout(@Session() session: Record<string, any>) {
@@ -57,7 +56,7 @@ export class AppController {
     
     const emailCheck = await userRepo.findOne({where: {email}})
     if(emailCheck){
-      throw new BadRequestException('Email is already taken')
+      throw new NotFoundException('Email is already taken')
     }else {
       user.email = registerDto.email;
       user.firstName = registerDto.firstName;
@@ -83,9 +82,7 @@ export class AppController {
     const email = userData.email;
     const password = userData.password;
     const selectPassword = await userRepo.findOne({select: {password: true}, where: {email: email}})
-    console.log(selectPassword)
-    bcrypt.compare(password, selectPassword, ()=>{console.log('asd')})
-
+    bcrypt.compare(password, selectPassword, ()=>{console.log('Logged in')})
   }
 
 
