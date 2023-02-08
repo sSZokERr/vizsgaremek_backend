@@ -28,7 +28,7 @@ export class AppController {
   @Post('/register')
   @HttpCode(200)
   async register(@Body() registerDto: RegisterDTO){
-    if(!registerDto.email || !registerDto.password || !registerDto.passwordAgain || !registerDto.firstName || registerDto.lastName){
+    if(!registerDto.email || !registerDto.password || !registerDto.passwordAgain || !registerDto.firstName || !registerDto.lastName){
       throw new BadRequestException('All inputfield must be filled')
     }
     if(!registerDto.email.includes('@')){
