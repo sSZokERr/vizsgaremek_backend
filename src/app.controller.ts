@@ -50,7 +50,10 @@ export class AppController {
     
     return user
   }
-  
-
+  @Get('/login')
+  @Render('login')
+  loginForm() {
+    return {};
+  }
   
 }
