@@ -5,6 +5,7 @@ import { Request, Response } from '@nestjs/common';
 import { AppService } from './app.service';
 import User from './user.entity';
 import * as bcrypt from 'bcrypt'
+import UserDataDto from './userdata.dto';
 
 @Controller()
 export class AppController {
@@ -31,7 +32,6 @@ export class AppController {
   registerPage() {
     return { message: 'Welcome to the register page' };
   }
-  
 
   @Post('/register')
   @HttpCode(200)
@@ -73,6 +73,19 @@ export class AppController {
   @Render('login')
   loginForm() {
     return {};
+  }
+
+  @Post('/login')
+  @HttpCode(200)
+  async logIn(@Body() userData: UserDataDto, res: Response, req: Request){
+    const userRepo = this.dataSource.getRepository(User)
+
+    const email = userData.email;
+    const password = userData.password;
+    const selectPassword = await userRepo.findOne({select: {password: true}, where: {email: email}})
+    console.log(selectPassword)
+    bcrypt.compare(password, selectPassword, ()=>{console.log('asd')})
+
   }
 
 
