@@ -90,11 +90,17 @@ export class AppController {
     const email = userData.email;
     const password = userData.password;
     const selectPassword = await userRepo.findOne({select: {password: true}, where: {email: email}})
-    bcrypt.compare(password, selectPassword, ()=>{console.log('Logged in')})
+
+    bcrypt.compare(password, selectPassword, (err:string, data:string) => {
+      //if error than throw error
+      if (err) throw err
+
+      //if both match than you can do anything
+      if (data) {
+          return  "Login success" 
+      }})
+
+
+
   }
-
-
-
-
-  
 }
