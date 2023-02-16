@@ -16,7 +16,7 @@ import User from './user.entity';
        User
       ],
       synchronize: true,
-    }),
+    })
   ],
   controllers: [AppController],
   providers: [AppService],

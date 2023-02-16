@@ -4,8 +4,15 @@ import { DataSource, Repository } from 'typeorm';
 import { Request, Response } from '@nestjs/common';
 import { AppService } from './app.service';
 import User from './user.entity';
-import * as bcrypt from 'bcrypt'
+import * as bcrypt from 'bcrypt';
 import UserDataDto from './userdata.dto';
+import {UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
+import { diskStorage } from "multer";
+import { randomUUID } from 'crypto';
+import Path = require('path');
+import { FileInterceptor} from '@nestjs/platform-express';
+
+
 
 @Controller()
 export class AppController {
@@ -13,6 +20,7 @@ export class AppController {
     private readonly appService: AppService,
     private dataSource: DataSource,
   ) {}
+
 
   @Get()
   @Render('index')
@@ -83,9 +91,17 @@ export class AppController {
     const email = userData.email;
     const password = userData.password;
     const selectPassword = await userRepo.findOne({select: {password: true}, where: {email: email}})
-    bcrypt.compare(password, selectPassword, ()=>{console.log('Logged in')})
+
+    bcrypt.compare(password, selectPassword, (err:string, data:string) => {
+      //if error than throw error
+      if (err) throw err
+
+      //if both match than you can do anything
+      if (data) {
+          return  "Login success" 
+      }})
+
+
+
   }
-
-
-  
 }
