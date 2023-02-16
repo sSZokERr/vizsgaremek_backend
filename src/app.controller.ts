@@ -61,6 +61,7 @@ export class AppController {
       user.email = registerDto.email;
       user.firstName = registerDto.firstName;
       user.lastName = registerDto.lastName;
+      user.registrationDate = new Date();
       user.password = await bcrypt.hash(registerDto.password, 15)
       await userRepo.save(user)
       

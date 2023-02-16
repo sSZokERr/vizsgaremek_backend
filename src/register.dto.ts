@@ -4,4 +4,5 @@ export class RegisterDTO{
     email:string;
     password:string;
     passwordAgain:string;
+    registrationDate:Date;
 }
