@@ -1,7 +1,6 @@
 import { RegisterDTO } from './register.dto';
-import { BadRequestException, Body, Controller, Get, HttpCode, NotFoundException, Param, Patch, Post, Redirect, Render, Session } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, HttpCode, NotFoundException, Param, Patch, Post, Redirect, Render, Res, Session } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
-import { Request, Response } from '@nestjs/common';
 import { AppService } from './app.service';
 import User from './user.entity';
 import * as bcrypt from 'bcrypt';
@@ -11,7 +10,10 @@ import { diskStorage } from "multer";
 import { randomUUID } from 'crypto';
 import Path = require('path');
 import { FileInterceptor} from '@nestjs/platform-express';
-import { async } from 'rxjs';
+import { JwtService } from '@nestjs/jwt';
+import {  Response, Request, response } from 'express';
+import { Req } from '@nestjs/common/decorators';
+import { UnauthorizedException } from '@nestjs/common/exceptions';
 
 
 
@@ -20,6 +22,7 @@ export class AppController {
   constructor(
     private readonly appService: AppService,
     private dataSource: DataSource,
+    private jwtService: JwtService
   ) {}
 
 
@@ -27,12 +30,6 @@ export class AppController {
   @Render('index')
   index() {
     return { message: 'Welcome to the homepage' };
-  }
-  @Get('/logout')
-  @Redirect()
-  logout(@Session() session: Record<string, any>) {
-    session.user_id = null;
-    return { url: '/' };
   }
 
   @Get('/register')
@@ -80,7 +77,8 @@ export class AppController {
   @Post('login')
   async login(
     @Body('email') email: string,
-    @Body('password') password: string
+    @Body('password') password: string,
+    @Res({passthrough: true}) response: Response
   ){
     console.log({email})
     const user = await this.appService.findOne({email});
@@ -90,6 +88,34 @@ export class AppController {
     if(!await bcrypt.compare(password, user.password)){
       throw new BadRequestException('Invalid password');
     }
-    return user;
+    const jwt = await this.jwtService.signAsync({id: user.id});
+    response.cookie('jwt', jwt, {httpOnly: true});
+    return {
+      message: 'Logged in'
+    };
+    
+  }
+  @Get('user')
+  async user(@Req() request: Request) {
+    try{
+     const cookie = request.cookies['jwt'];
+     const data = await this.jwtService.verifyAsync(cookie)
+     if(!data){
+      throw new UnauthorizedException();
+     }
+     const user = await this.appService.findOne({id: data['id']})
+     const {password, ...result} = user;
+
+     return result;
+    }catch(e) {
+      throw new UnauthorizedException();
+    }
+  }
+  @Post('logout')
+  async logout(@Res({passthrough: true}) response: Response) {
+    response.clearCookie('jwt');
+    return {
+      message: 'Logged out'
+    }
   }
 }
