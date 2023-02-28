@@ -11,6 +11,7 @@ import { diskStorage } from "multer";
 import { randomUUID } from 'crypto';
 import Path = require('path');
 import { FileInterceptor} from '@nestjs/platform-express';
+import { async } from 'rxjs';
 
 
 
@@ -75,33 +76,20 @@ export class AppController {
       
       return user
     }
-    
   }
-  @Get('/login')
-  @Render('login')
-  loginForm() {
-    return {};
-  }
-
-  @Post('/login')
-  @HttpCode(200)
-  async logIn(@Body() userData: UserDataDto, res: Response, req: Request){
-    const userRepo = this.dataSource.getRepository(User)
-
-    const email = userData.email;
-    const password = userData.password;
-    const selectPassword = await userRepo.findOne({select: {password: true}, where: {email: email}})
-
-    bcrypt.compare(password, selectPassword, (err:string, data:string) => {
-      //if error than throw error
-      if (err) throw err
-
-      //if both match than you can do anything
-      if (data) {
-          return  "Login success" 
-      }})
-
-
-
+  @Post('login')
+  async login(
+    @Body('email') email: string,
+    @Body('password') password: string
+  ){
+    console.log({email})
+    const user = await this.appService.findOne({email});
+    if(!user){
+      throw new BadRequestException('Invalid email');
+    }
+    if(!await bcrypt.compare(password, user.password)){
+      throw new BadRequestException('Invalid password');
+    }
+    return user;
   }
 }
