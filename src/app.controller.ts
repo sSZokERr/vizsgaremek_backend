@@ -1,17 +1,11 @@
 import { RegisterDTO } from './register.dto';
-import { BadRequestException, Body, Controller, Get, HttpCode, NotFoundException, Param, Patch, Post, Redirect, Render, Res, Session } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { BadRequestException, Body, Controller, Get, HttpCode, NotFoundException, Post, Render, Res} from '@nestjs/common';
+import { DataSource } from 'typeorm';
 import { AppService } from './app.service';
 import User from './user.entity';
 import * as bcrypt from 'bcrypt';
-import UserDataDto from './userdata.dto';
-import {UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
-import { diskStorage } from "multer";
-import { randomUUID } from 'crypto';
-import Path = require('path');
-import { FileInterceptor} from '@nestjs/platform-express';
 import { JwtService } from '@nestjs/jwt';
-import {  Response, Request, response } from 'express';
+import {  Response, Request } from 'express';
 import { Req } from '@nestjs/common/decorators';
 import { UnauthorizedException } from '@nestjs/common/exceptions';
 
