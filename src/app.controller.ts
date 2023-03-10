@@ -85,10 +85,10 @@ export class AppController {
     if(!await bcrypt.compare(password, user.password)){
       throw new BadRequestException('Invalid password');
     }
-    const jwt = await this.jwtService.signAsync({id: user.id});
+    const jwt = await this.jwtService.signAsync({id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName});
     response.cookie('jwt', jwt, {httpOnly: true});
     return {
-      message: 'Logged in'
+      token: jwt
     };
     
   }
@@ -130,7 +130,6 @@ export class AppController {
     })
   }))
   handleUpload(@UploadedFile() file: Express.Multer.File) {
-    console.log('file', file)
-    return 'File upload'
+    return 'File uploaded'
   }
 }

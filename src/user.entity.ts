@@ -19,4 +19,5 @@ export default class User {
 
     @Column()
     registrationDate: Date
+
 }
