@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt/dist';
+import { MulterModule } from '@nestjs/platform-express';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -18,6 +19,7 @@ import User from './user.entity';
       ],
       synchronize: true,
     }),
+    MulterModule.register({dest: './uploads'}),
     TypeOrmModule.forFeature([User]),
     JwtModule.register({
       secret: 'secret',

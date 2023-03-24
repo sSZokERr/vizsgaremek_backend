@@ -6,8 +6,11 @@ import User from './user.entity';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import {  Response, Request } from 'express';
-import { Req } from '@nestjs/common/decorators';
+import { Req, UploadedFile, UseInterceptors } from '@nestjs/common/decorators';
 import { UnauthorizedException } from '@nestjs/common/exceptions';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 
 
 
@@ -82,10 +85,10 @@ export class AppController {
     if(!await bcrypt.compare(password, user.password)){
       throw new BadRequestException('Invalid password');
     }
-    const jwt = await this.jwtService.signAsync({id: user.id});
+    const jwt = await this.jwtService.signAsync({id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName});
     response.cookie('jwt', jwt, {httpOnly: true});
     return {
-      message: 'Logged in'
+      token: jwt
     };
     
   }
@@ -111,5 +114,22 @@ export class AppController {
     return {
       message: 'Logged out'
     }
+  }
+
+  @Post('uploadFile')
+  @UseInterceptors(FileInterceptor('file', {
+    storage: diskStorage({
+      destination: './uploads',
+      filename: (req, file, callback) => {
+        const uniqueSuffix = 
+          Date.now() + '-' + Math.round(Math.random() * 1e9)
+        const extension = extname(file.originalname)
+        const filename = `${file.originalname}-${uniqueSuffix}${extension}`
+        callback(null, filename)
+      }
+    })
+  }))
+  handleUpload(@UploadedFile() file: Express.Multer.File) {
+    return 'File uploaded'
   }
 }
