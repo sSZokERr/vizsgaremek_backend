@@ -11,6 +11,8 @@ import { UnauthorizedException } from '@nestjs/common/exceptions';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { userInfo } from 'os';
+import Image from './img.entity';
 
 
 
@@ -115,21 +117,23 @@ export class AppController {
       message: 'Logged out'
     }
   }
-
+  
   @Post('uploadFile')
   @UseInterceptors(FileInterceptor('file', {
     storage: diskStorage({
       destination: './uploads',
       filename: (req, file, callback) => {
-        const uniqueSuffix = 
-          Date.now() + '-' + Math.round(Math.random() * 1e9)
-        const extension = extname(file.originalname)
-        const filename = `${file.originalname}-${uniqueSuffix}${extension}`
+        const filename = `${file.originalname}`
         callback(null, filename)
       }
     })
   }))
-  handleUpload(@UploadedFile() file: Express.Multer.File) {
+  async handleUpload(@UploadedFile() file: Express.Multer.File) {
+    const imageRepo = this.dataSource.getRepository(Image)
+    const imageUp = new Image()
+    imageUp.imageUrl = file.originalname
+    imageUp.id = parseInt(file.originalname.split('-')[0])
+    await imageRepo.save(imageUp)
     return 'File uploaded'
   }
 }
