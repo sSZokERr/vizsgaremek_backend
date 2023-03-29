@@ -10,8 +10,6 @@ import { Req, UploadedFile, UseInterceptors } from '@nestjs/common/decorators';
 import { UnauthorizedException } from '@nestjs/common/exceptions';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname } from 'path';
-import { userInfo } from 'os';
 import Image from './img.entity';
 
 
@@ -21,22 +19,14 @@ export class AppController {
   constructor(
     private readonly appService: AppService,
     private dataSource: DataSource,
-    private jwtService: JwtService
-  ) {}
+    private jwtService: JwtService){}
 
- 
-  @Get()
-  @Render('index')
-  index() {
-    return { message: 'Welcome to the homepage' };
+  @Get('getImages')
+    async getAllImages() {
+    const imageRepo = this.dataSource.getRepository(Image);
+    return await (await this.appService.findAllImages());
   }
-
-  @Get('/register')
-  @Render('register')
-  registerPage() {
-    return { message: 'Welcome to the register page' };
-  }
-
+  
   @Post('/register')
   @HttpCode(200)
   async register(@Body() registerDto: RegisterDTO, res: Response){
@@ -136,4 +126,6 @@ export class AppController {
     await imageRepo.save(imageUp)
     return 'File uploaded'
   }
+  
+  
 }

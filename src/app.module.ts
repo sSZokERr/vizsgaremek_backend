@@ -21,7 +21,7 @@ import Image from './img.entity';
       synchronize: true,
     }),
     MulterModule.register({dest: './uploads'}),
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Image]),
     JwtModule.register({
       secret: 'secret',
       signOptions: {expiresIn: '7d'}
