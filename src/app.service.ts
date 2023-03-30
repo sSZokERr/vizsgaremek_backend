@@ -3,6 +3,7 @@ import {InjectRepository} from '@nestjs/typeorm';
 import User from './user.entity';
 import {Repository} from 'typeorm';
 import Image from './img.entity';
+import { profile } from 'console';
 
 @Injectable()
 export class AppService {
@@ -19,5 +20,11 @@ export class AppService {
     const images = await this.imageRepo.find();
     const imageArray = JSON.parse(JSON.stringify(images))
     return imageArray;
+  }
+
+  async findProfilePicture(id : any): Promise<User>{
+    const profilePicture = await this.userRepo.query(`SELECT \`profilePicture\` FROM \`user\` WHERE id = ${id}`)
+    const profilePictureJson = JSON.parse(JSON.stringify(profilePicture))
+    return profilePictureJson
   }
 }

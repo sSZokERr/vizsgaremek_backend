@@ -20,7 +20,7 @@ import Image from './img.entity';
       ],
       synchronize: true,
     }),
-    MulterModule.register({dest: './uploads'}),
+    MulterModule.register({dest: '../public'}),
     TypeOrmModule.forFeature([User, Image]),
     JwtModule.register({
       secret: 'secret',

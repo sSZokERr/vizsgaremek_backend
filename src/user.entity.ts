@@ -18,6 +18,18 @@ export default class User {
     lastName: string
 
     @Column()
-    registrationDate: Date
+    profilePicture: string
+
+    @Column()
+    studies: string
+
+    @Column()
+    occupation: string
+
+    @Column()
+    workExperience: string
+
+    @Column()
+    aboutMe: string
 
 }
