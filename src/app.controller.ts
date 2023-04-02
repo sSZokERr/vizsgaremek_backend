@@ -9,20 +9,17 @@ import {  Response, Request } from 'express';
 import { Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common/decorators';
 import { UnauthorizedException } from '@nestjs/common/exceptions';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
 import Image from './img.entity';
-import { GoogleDriveService } from './googleDriveService';
-import * as path from 'path';
-import * as fs from 'fs';
+import * as multer from 'multer'
+import { Storage } from '@google-cloud/storage';
+import { extname } from 'path';
 
-const dotenv = require("dotenv")
+const storage = new Storage({
+  projectId: 'vernissage-b8feb',
+  keyFilename: './src/ServiceAccountKey/vernissageAdminSDK.json', 
+})
 
-dotenv.config();
-console.log(process.env.GOOGLE_DRIVE_CLIENT_ID);
-console.log(process.env.GOOGLE_DRIVE_CLIENT_SECRET);
-console.log(process.env.GOOGLE_DRIVE_REDIRECT_URI);
-console.log(process.env.GOOGLE_DRIVE_REFRESH_TOKEN);
-
+const bucket = storage.bucket('vernissage-b8feb.appspot.com')
 
 @Controller()
 export class AppController {
@@ -87,7 +84,15 @@ export class AppController {
     if(!await bcrypt.compare(password, user.password)){
       throw new BadRequestException('Invalid password');
     }
-    const jwt = await this.jwtService.signAsync({id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, studies: user.studies, occupation: user.occupation, workExperience: user.workExperience, aboutMe: user.aboutMe});
+    const jwt = await this.jwtService.signAsync({
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      studies: user.studies,
+      occupation: user.occupation,
+      workExperience: user.workExperience,
+      aboutMe: user.aboutMe});
     response.cookie('jwt', jwt, {httpOnly: true});
     return {
       token: jwt
@@ -118,63 +123,43 @@ export class AppController {
     }
   }
   
-  @Post('uploadFile')
-  @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: './public',
-      filename: (req, file, callback) => {
-        const filename = `${file.originalname}`
-        callback(null, filename)
-      }
-    })
-  }))
-  async handleUpload(@UploadedFile() file: Express.Multer.File) {
-    const imageRepo = this.dataSource.getRepository(Image)
-    const imageUp = new Image()
-    imageUp.imageUrl = file.originalname
-    imageUp.id = parseInt(file.originalname.split('-')[0])
-    await imageRepo.save(imageUp)
-
-      const googleDriveService = new GoogleDriveService(
-       '70780256000-kjlnf28ujenpdt0731k01qia5pl0mgrf.apps.googleusercontent.com',
-       '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',
-       'https://developers.google.com/oauthplayground',
-       '1//04hX_2ymtB-vvCgYIARAAGAQSNwF-L9IrZe4UVhJGaIdEx8PSXV3MenvSPQfAiA7Rf3iVAJe-cWyi5BQdEKyUpTJk_6VjeQKOE3w'
-       );
-      console.log(file.originalname)
-      const finalPath = path.resolve(__dirname, `../public/${file.originalname}`);
-      console.log(finalPath)
-      const folderName = 'vizsgaremek';
-    
-      if (!fs.existsSync(finalPath)) {
-        throw new Error('File not found!');
-      }
-    
-      let folder = await googleDriveService.searchFolder(folderName).catch((error) => {
-        console.error(error);
-        return null;
-      });
-    
-      if (!folder) {
-        folder = await googleDriveService.createFolder(folderName);
-      }
-    
-      await googleDriveService.saveFile(file.originalname, finalPath, 'image/jpg', folder.id).catch((error) => {
-        console.error(error);
-      });
-    
-      console.info('File uploaded successfully!');
-      console.log(folder)
-      // Delete the file on the server
-      fs.unlinkSync(finalPath);
-
-    return 'File uploaded'
-  }
+    @Post('upload')
+    @UseInterceptors(FileInterceptor('file', {
+      storage: multer.memoryStorage(),
+      limits: {
+        fileSize: 20 * 1024 * 1024, // 20MB
+      },
+      preservePath: true,
+    }))
+    async uploadFile(@UploadedFile() file: Express.Multer.File,
+                     @Body() body: any): Promise<{imageUrl: string}> {
+      try {
+        const fileName = file.originalname + extname(file.originalname);
+        const fileUpload = bucket.file(fileName);
   
-  @Post('profilePicture/:id')
-    async getProfilePicture(id: number){
-      const profilepicture = this.dataSource.getRepository(User);
-      return await (await this.appService.findProfilePicture(id));
+        const blobStream = fileUpload.createWriteStream({
+          metadata: {
+            contentType: file.mimetype,
+          },
+        });
+  
+        blobStream.on('error', (err) => {
+          console.log(err);
+          throw new Error();
+        });
+  
+        return new Promise((resolve, reject) => {
+          blobStream.on('finish', async () => {
+            const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileUpload.name}`;
+            resolve({ imageUrl: publicUrl });
+          });
+  
+          blobStream.end(file.buffer);
+        });
+      } catch (err) {
+        console.log(err);
+        throw new Error(err);
+      }
     }
-  
-}
+  }
+
