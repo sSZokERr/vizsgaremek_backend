@@ -21,11 +21,11 @@ import { extname } from "path";
 import * as admin from "firebase-admin";
 
 const storage = new Storage({
-  projectId: "vernissage-b8feb",
+  projectId: "vernissage-2e8f8",
   keyFilename: "./src/ServiceAccountKey/vernissageAdminSDK.json",
 });
 
-const bucket = storage.bucket("vernissage-b8feb.appspot.com");
+const bucket = storage.bucket("vernissage-2e8f8.appspot.com");
 
 @Controller()
 export class AppController {
@@ -36,11 +36,6 @@ export class AppController {
   ) {}
   // private firebaseService: FirebaseService){}
 
-  @Get("getImages")
-  async getAllImages() {
-    const imageRepo = this.dataSource.getRepository(Image);
-    return await await this.appService.findAllImages();
-  }
 
   @Post("/register")
   @HttpCode(200)
@@ -105,6 +100,7 @@ export class AppController {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
+      projectsCount: user.projectsCount,
       studies: user.studies,
       occupation: user.occupation,
       workExperience: user.workExperience,

@@ -21,6 +21,9 @@ export default class User {
     profilePicture: string
 
     @Column()
+    projectsCount: number
+
+    @Column()
     studies: string
 
     @Column()
