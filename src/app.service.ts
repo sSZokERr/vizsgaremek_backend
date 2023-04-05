@@ -31,7 +31,7 @@ export class AppService {
   async getLastImageUrl(): Promise<string> {
     const storage = new Storage({
       projectId: 'vernissage-2e8f8',
-      keyFilename: '../src/ServiceAccountKey/vernissageAdminSDK.json',
+      keyFilename: './src/ServiceAccountKey/vernissageAdminSDK.json',
     });
     const bucketName = 'vernissage-2e8f8.appspot.com';
     const [files] = await this.storage.bucket(bucketName).getFiles();

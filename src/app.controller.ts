@@ -15,11 +15,11 @@ import { Storage } from '@google-cloud/storage';
 import { extname } from 'path';
 
 const storage = new Storage({
-  projectId: 'vernissage-b8feb',
+  projectId: 'vernissage-2e8f8',
   keyFilename: './src/ServiceAccountKey/vernissageAdminSDK.json', 
 })
 
-const bucket = storage.bucket('vernissage-b8feb.appspot.com')
+const bucket = storage.bucket('vernissage-2e8f8.appspot.com')
 
 @Controller()
 export class AppController {
@@ -145,6 +145,8 @@ export class AppController {
     }))
     async uploadFile(@UploadedFile() file: Express.Multer.File,
                      @Body() body: any): Promise<{imageUrl: string}> {
+                      
+                      
       try {
         const fileName = file.originalname + extname(file.originalname);
         const fileUpload = bucket.file(fileName);
@@ -163,6 +165,12 @@ export class AppController {
         return new Promise((resolve, reject) => {
           blobStream.on('finish', async () => {
             const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileUpload.name}`;
+            const imageRepo = this.dataSource.getRepository(Image);
+            const image = new Image();
+
+            image.id = parseInt(file.originalname.split('-')[0])
+            image.imageUrl = await this.appService.getLastImageUrl();
+            imageRepo.save(image)
             resolve({ imageUrl: publicUrl });
           });
   
@@ -172,6 +180,39 @@ export class AppController {
         console.log(err);
         throw new Error(err);
       }
+    }
+    @Post("getFiles")
+    async getAllFiles() {
+      const [files] = await bucket.getFiles();
+      const fileData = await Promise.all(
+        files.map(async (file) => {
+          const [url] = await file.getSignedUrl({
+            action: 'read',
+            expires: '03-17-2024',
+          });
+          return {
+            userid: file.name.split('-')[0],
+            url: url,
+          };
+        })
+      );
+        return fileData
+    }
+    @Post("getProfileDetails")
+    async getProfileDetails(@Body("userid") userid: number){
+      const selectedUser = await this.appService.findOne( {id: userid} );
+      return (
+        { email: selectedUser.email,
+          firstName: selectedUser.firstName,
+          lastName: selectedUser.lastName,
+          projectsCount: selectedUser.projectsCount,
+          studies: selectedUser.studies,
+          occupation: selectedUser.occupation,
+          workExperience: selectedUser.workExperience,
+          aboutMe: selectedUser.aboutMe,
+          profilePicture: selectedUser.profilePicture
+        }
+      )
     }
   }
 
