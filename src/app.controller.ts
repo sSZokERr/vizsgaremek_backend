@@ -144,57 +144,33 @@ export class AppController {
       preservePath: true,
     }))
     async uploadFile(@UploadedFile() file: Express.Multer.File,
-                     @Body() body: any): Promise<{imageUrl: string}> {
-                      
-                      
+                     @Body() body: any): Promise<{imageUrl: string}> {        
       try {
         const fileName = file.originalname + extname(file.originalname);
         const fileUpload = bucket.file(fileName);
-  
         const blobStream = fileUpload.createWriteStream({
           metadata: {
             contentType: file.mimetype,
           },
         });
-  
         blobStream.on('error', (err) => {
           console.log(err);
           throw new Error();
         });
-  
         return new Promise((resolve, reject) => {
           blobStream.on('finish', async () => {
-
-            
             const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileUpload.name}`;
             const imageRepo = this.dataSource.getRepository(Image);
             const image = new Image();
             console.log(file.originalname)
             image.id = parseInt(file.originalname.split('-')[0])
-            const [files] = await bucket.getFiles();
-
-            if (files.length === 0) {
-              throw new Error('No files found in the images/ folder');
-            }
-            const fileData = await Promise.all(
-              files.map(async (file) => {
-                const [url] = await file.getSignedUrl({
-                  action: 'read',
-                  expires: '03-17-2025',
-                });
-                return {
-                  userid: file.name.split('-')[0],
-                  url: url,
-                };
-              })
-            );
-            const lastLink = fileData[fileData.length - 1].url;
-            console.log(lastLink)
-            image.imageUrl = await lastLink;
+            image.imageType = parseInt(file.originalname.split('-')[1])
+            image.project = parseInt(file.originalname.split('-')[2])
+            image.project = parseInt(file.originalname.split('-')[3])
+            image.imageUrl = await this.appService.getLastImageUrl();
             imageRepo.save(image)
             resolve({ imageUrl: publicUrl });
           });
-  
           blobStream.end(file.buffer);
         });
       } catch (err) {

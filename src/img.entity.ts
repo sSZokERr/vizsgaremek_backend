@@ -10,5 +10,14 @@ export default class Image {
     id: number
 
     @Column()
+    imageType: number // 0 - profil, 1 - projekt cover, 2 - projekt kep
+
+    @Column()
+    project: number // n - hanyadik projekt
+
+    @Column()
+    positionInProject: number // n - hanyadik kep a projektben 
+
+    @Column("longtext")
     imageUrl: string
 }
