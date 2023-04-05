@@ -6,7 +6,7 @@ import User from './user.entity';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import {  Response, Request } from 'express';
-import { Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common/decorators';
+import { Param, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common/decorators';
 import { UnauthorizedException } from '@nestjs/common/exceptions';
 import { FileInterceptor } from '@nestjs/platform-express';
 import Image from './img.entity';
@@ -15,11 +15,11 @@ import { Storage } from '@google-cloud/storage';
 import { extname } from 'path';
 
 const storage = new Storage({
-  projectId: 'vernissage-b8feb',
+  projectId: 'vernissage-2e8f8',
   keyFilename: './src/ServiceAccountKey/vernissageAdminSDK.json', 
 })
 
-const bucket = storage.bucket('vernissage-b8feb.appspot.com')
+const bucket = storage.bucket('vernissage-2e8f8.appspot.com')
 
 @Controller()
 export class AppController {
@@ -33,6 +33,14 @@ export class AppController {
     const imageRepo = this.dataSource.getRepository(Image);
     return await (await this.appService.findAllImages());
   }
+
+  @Get('getImages/:id')
+    async getImagesById(@Param('id') id: number): Promise<Image[]> {
+    const imageRepo = this.dataSource.getRepository(Image);
+    const imagesObject = await this.appService.findAllImages();
+    const images = Array.isArray(imagesObject) ? imagesObject : Object.values(imagesObject);
+    return images.filter(image => image.id === id);
+}
   
   @Post('/register')
   @HttpCode(200)
@@ -70,6 +78,8 @@ export class AppController {
       return user
     }
   }
+
+
   @Post('login')
   async login(
     @Body('email') email: string,
@@ -97,8 +107,9 @@ export class AppController {
     return {
       token: jwt
     };
-    
   }
+
+
   @Get('user')
   async user(@Req() request: Request) {
     try{
@@ -152,8 +163,12 @@ export class AppController {
           blobStream.on('finish', async () => {
             const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileUpload.name}`;
             resolve({ imageUrl: publicUrl });
+            const imageRepo = this.dataSource.getRepository(Image)
+            const image = new Image()
+            image.id = parseInt(file.originalname.split('-')[0]);
+            image.imageUrl = await this.appService.getLastImageUrl();
+            await imageRepo.save(image);
           });
-  
           blobStream.end(file.buffer);
         });
       } catch (err) {
@@ -161,5 +176,25 @@ export class AppController {
         throw new Error(err);
       }
     }
+
+
+    @Post("getFiles")
+    async getAllFiles() {
+      const [files] = await bucket.getFiles();
+      const fileData = await Promise.all(
+        files.map(async (file) => {
+          const [url] = await file.getSignedUrl({
+            action: 'read',
+            expires: '03-17-2025',
+          });
+          return {
+            userid: file.name.split('-')[0],
+            url: url,
+          };
+        })
+      );
+        return fileData
+    }
   }
 
+  

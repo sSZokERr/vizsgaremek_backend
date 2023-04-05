@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import User from './user.entity';
 import Image from './img.entity';
+import { Storage } from '@google-cloud/storage';
 
 @Module({
   imports: [
@@ -28,6 +29,6 @@ import Image from './img.entity';
     })
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, Storage],
 })
 export class AppModule {}
