@@ -18,9 +18,6 @@ export default class User {
     lastName: string
 
     @Column()
-    profilePicture: string
-
-    @Column()
     projectsCount: number
 
     @Column()

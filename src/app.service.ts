@@ -17,16 +17,32 @@ export class AppService {
     return this.userRepo.findOneBy(condition)
   }
 
+  async findLatestUserID(): Promise<number> {
+    const latestUserID = await this.userRepo.query("SELECT MAX(id) as latestUserID FROM user;")
+    return latestUserID[0].latestUserID
+  }
+  async updateProfilePicture(id: number): Promise<string> {
+    return ""
+  }
   async findAllImages(): Promise<Image> {
     const images = await this.imageRepo.find();
     const imageArray = JSON.parse(JSON.stringify(images))
     return imageArray;
   }
 
-  async findProfilePicture(id : any): Promise<User>{
-    const profilePicture = await this.userRepo.query(`SELECT \`profilePicture\` FROM \`user\` WHERE id = ${id}`)
-    const profilePictureJson = JSON.parse(JSON.stringify(profilePicture))
-    return profilePictureJson
+  async findProfilePictureURL(id : number): Promise<Image>{
+    const profilePictureURL = await
+      this.imageRepo.query(`
+        SELECT imageUrl FROM image WHERE id = ${id} AND imageType = 0;`
+      )
+    return profilePictureURL
+  }
+  async hasProfilePicture(id: number, newImageURL: string): Promise<boolean>{
+    if(this.imageRepo.query(`SELECT id FROM image WHERE id = ${id};`)){
+      this.imageRepo.update({id: id},{imageUrl: newImageURL})
+      return true;
+    }
+    return false
   }
   async getLastImageUrl(): Promise<string> {
     const storage = new Storage({
@@ -65,5 +81,7 @@ export class AppService {
     const lastLink = fileData[0].url;
     console.log("public last url: " + lastLink);
     return lastLink;
+    }
+
   }
-  }
+  

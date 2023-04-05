@@ -13,6 +13,7 @@ import Image from './img.entity';
 import * as multer from 'multer'
 import { Storage } from '@google-cloud/storage';
 import { extname } from 'path';
+import { profile } from 'console';
 
 const storage = new Storage({
   projectId: 'vernissage-2e8f8',
@@ -62,6 +63,8 @@ export class AppController {
 
     const userRepo = this.dataSource.getRepository(User);
     const user = new User();
+    const imageRepo = this.dataSource.getRepository(Image);
+    const profilePicture = new Image();
 
     //Email check
     const email = registerDto.email;
@@ -69,16 +72,19 @@ export class AppController {
     const emailCheck = await userRepo.findOne({ where: { email } });
     if (emailCheck) {
       throw new NotFoundException("Email is already taken");
-    } else {
-      user.email = registerDto.email;
-      user.firstName = registerDto.firstName;
-      user.lastName = registerDto.lastName;
-      user.password = await bcrypt.hash(registerDto.password, 15);
-      user.profilePicture = "default_profile_picture.jpg";
-      await userRepo.save(user);
-
-      return user;
     }
+    user.email = registerDto.email;
+    user.firstName = registerDto.firstName;
+    user.lastName = registerDto.lastName;
+    user.password = await bcrypt.hash(registerDto.password, 15);
+    await userRepo.save(user);
+
+    profilePicture.imageUrl = "https://firebasestorage.googleapis.com/v0/b/vernissage-2e8f8.appspot.com/o/default_profile_picture.jpg?alt=media&token=25c4e207-c7af-4ffc-acae-3ce92778eb09"
+    profilePicture.imageType = 0;
+    profilePicture.id = await this.appService.findLatestUserID()
+    await imageRepo.save(profilePicture)
+    return user;
+
   }
   @Post('login')
   async login(
@@ -86,7 +92,6 @@ export class AppController {
     @Body("password") password: string,
     @Res({ passthrough: true }) response: Response
   ) {
-    console.log({ email });
     const user = await this.appService.findOne({ email });
     if (!user) {
       throw new BadRequestException("Invalid email");
@@ -166,9 +171,13 @@ export class AppController {
             image.id = parseInt(file.originalname.split('-')[0])
             image.imageType = parseInt(file.originalname.split('-')[1])
             image.project = parseInt(file.originalname.split('-')[2])
-            image.project = parseInt(file.originalname.split('-')[3])
+            image.positionInProject = parseInt(file.originalname.split('-')[3])
             image.imageUrl = await this.appService.getLastImageUrl();
-            imageRepo.save(image)
+
+            // Ha van profilkepe, akkor appService-ban updateli az uj URL-re
+            if(!this.appService.hasProfilePicture(image.id, image.imageUrl)){
+              imageRepo.save(image) // egyeb irant toltse fel az adatbazisba
+            }
             resolve({ imageUrl: publicUrl });
           });
           blobStream.end(file.buffer);
@@ -198,6 +207,7 @@ export class AppController {
     @Post("getProfileDetails")
     async getProfileDetails(@Body("userid") userid: number){
       const selectedUser = await this.appService.findOne( {id: userid} );
+      const profilePictureURL = await this.appService.findProfilePictureURL(userid)
       return (
         { email: selectedUser.email,
           firstName: selectedUser.firstName,
@@ -207,9 +217,13 @@ export class AppController {
           occupation: selectedUser.occupation,
           workExperience: selectedUser.workExperience,
           aboutMe: selectedUser.aboutMe,
-          profilePicture: selectedUser.profilePicture
+          profilePicture: profilePictureURL[0].imageUrl
         }
       )
+    }
+    @Post("updateProfilePicture")
+    async updateProfilePicture(@Body("userid") userid: number){
+
     }
   }
 
