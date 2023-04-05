@@ -28,39 +28,6 @@ export class AppService {
     const profilePictureJson = JSON.parse(JSON.stringify(profilePicture))
     return profilePictureJson
   }
-  async getLastImageUrl(): Promise<string> {
-    const storage = new Storage({
-      projectId: 'vernissage-2e8f8',
-      keyFilename: './src/ServiceAccountKey/vernissageAdminSDK.json',
-    });
-    const bucketName = 'vernissage-2e8f8.appspot.com';
-    const [files] = await this.storage.bucket(bucketName).getFiles();
-
-    if (files.length === 0) {
-      throw new Error('No files found in the images/ folder');
-    }
-
-    /* const lastFile = files.reduce((prev, curr) => {
-      return prev.metadata.timeCreated > curr.metadata.timeCreated ? prev : curr;
-
-    });
-    console.log(lastFile)
-    const [url] = await lastFile.getSignedUrl({ action: 'read', expires: '04-17-2025' }); */
-    const fileData = await Promise.all(
-      files.map(async (file) => {
-        const [url] = await file.getSignedUrl({
-          action: 'read',
-          expires: '03-17-2025',
-        });
-        return {
-          userid: file.name.split('-')[0],
-          url: url,
-        };
-      })
-    );
-    const lastLink = fileData[fileData.length - 1].url;
-      console.log(lastLink)
-    return lastLink;
-  }
+  
 
   }
