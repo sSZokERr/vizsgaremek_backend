@@ -221,9 +221,13 @@ export class AppController {
         }
       )
     }
-    @Post("updateProfilePicture")
-    async updateProfilePicture(@Body("userid") userid: number){
-
+    @Post("updateProfileDetails")
+    async updateProfileDetails(@Body("userid") userid: number,
+                               @Body("updateStudies") updateStudies: string,
+                               @Body("updateOccupation") updateOccupation: string,
+                               @Body("updateWorkExperience") updateWorkExperience: string,
+                               @Body("updateAboutMe") updateAboutMe: string){
+        this.appService.updateProfileDetails(userid, updateStudies, updateOccupation, updateWorkExperience, updateAboutMe)
     }
   }
 

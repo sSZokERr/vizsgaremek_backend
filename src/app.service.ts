@@ -21,8 +21,33 @@ export class AppService {
     const latestUserID = await this.userRepo.query("SELECT MAX(id) as latestUserID FROM user;")
     return latestUserID[0].latestUserID
   }
-  async updateProfilePicture(id: number): Promise<string> {
-    return ""
+  async updateProfileDetails(id: number,
+                             updateStudies: string,
+                             updateOccupation: string,
+                             updateWorkExperience: string,
+                             updateAboutMe: string): Promise<string> {
+    await this.userRepo.update({
+      id: id,
+    }, {
+      studies: updateStudies,
+    });
+    await this.userRepo.update({
+      id: id,
+    },{
+        occupation: updateOccupation
+    });
+    await this.userRepo.update({
+      id: id,
+    },{
+        workExperience: updateWorkExperience
+    });
+    await this.userRepo.update({
+      id: id,
+    },{
+        aboutMe: updateAboutMe
+    });
+    
+    return
   }
   async findAllImages(): Promise<Image> {
     const images = await this.imageRepo.find();
