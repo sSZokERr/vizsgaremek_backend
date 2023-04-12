@@ -101,14 +101,6 @@ export class AppController {
     }
     const jwt = await this.jwtService.signAsync({
       id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      projectsCount: user.projectsCount,
-      studies: user.studies,
-      occupation: user.occupation,
-      workExperience: user.workExperience,
-      aboutMe: user.aboutMe,
     });
     response.cookie("jwt", jwt, { httpOnly: true });
     return {
@@ -200,6 +192,7 @@ export class AppController {
           return {
             userid: file.name.split('-')[0],
             url: url,
+            imageType: file.name.split('-')[1],
           };
         })
       );
@@ -223,7 +216,7 @@ export class AppController {
         }
       )
     }
-    
+
     @Post("updateProfileDetails")
     async updateProfileDetails(@Body("userid") userid: number,
                                @Body("updateStudies") updateStudies: string,
@@ -231,6 +224,12 @@ export class AppController {
                                @Body("updateWorkExperience") updateWorkExperience: string,
                                @Body("updateAboutMe") updateAboutMe: string){
         this.appService.updateProfileDetails(userid, updateStudies, updateOccupation, updateWorkExperience, updateAboutMe)
+    }
+
+    @Get("users")
+    async getUsers(){
+      const userRepo = this.dataSource.getRepository(User);
+      return userRepo.find();
     }
   }
 
