@@ -175,7 +175,7 @@ export class AppController {
             image.imageUrl = await this.appService.getLastImageUrl();
 
             // Ha van profilkepe, akkor appService-ban updateli az uj URL-re
-            if(!this.appService.hasProfilePicture(image.id, image.imageUrl)){
+            if(this.appService.hasProfilePicture(image.id, image.imageUrl)){
               imageRepo.save(image) // egyeb irant toltse fel az adatbazisba
             }
             resolve({ imageUrl: publicUrl });
@@ -187,7 +187,8 @@ export class AppController {
         throw new Error(err);
       }
     }
-    @Post("getFiles")
+
+    @Get("getFiles")
     async getAllFiles() {
       const [files] = await bucket.getFiles();
       const fileData = await Promise.all(
@@ -204,6 +205,7 @@ export class AppController {
       );
         return fileData
     }
+
     @Post("getProfileDetails")
     async getProfileDetails(@Body("userid") userid: number){
       const selectedUser = await this.appService.findOne( {id: userid} );
@@ -221,6 +223,7 @@ export class AppController {
         }
       )
     }
+    
     @Post("updateProfileDetails")
     async updateProfileDetails(@Body("userid") userid: number,
                                @Body("updateStudies") updateStudies: string,
