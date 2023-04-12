@@ -79,7 +79,7 @@ export class AppController {
     user.password = await bcrypt.hash(registerDto.password, 15);
     await userRepo.save(user);
 
-    profilePicture.imageUrl = "https://firebasestorage.googleapis.com/v0/b/vernissage-2e8f8.appspot.com/o/default_profile_picture.jpg?alt=media&token=25c4e207-c7af-4ffc-acae-3ce92778eb09"
+    profilePicture.imageUrl = "https://firebasestorage.googleapis.com/v0/b/vernissage-2e8f8.appspot.com/o/0-0-0-0-default.jpg?alt=media&token=b8c49d6d-2455-473f-9c7a-583c29c0d1ff"
     profilePicture.imageType = 0;
     profilePicture.id = await this.appService.findLatestUserID()
     await imageRepo.save(profilePicture)
