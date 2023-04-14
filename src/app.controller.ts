@@ -178,6 +178,11 @@ export class AppController {
 
     @Post("getProfileDetails")
     async getProfileDetails(@Body("userid") userid: number){
+      if(!await this.appService.findOne({id: userid})){
+        throw new BadRequestException("No user found with this ID.")
+      }
+
+      try{
       const selectedUser = await this.appService.findOne( {id: userid} );
       const profilePictureURL = await this.appService.findProfilePictureURL(userid)
       return (
@@ -193,6 +198,10 @@ export class AppController {
         }
       )
     }
+    catch(BadRequestException){
+      return
+    }
+  }
 
     @Post("updateProfileDetails")
     async updateProfileDetails(@Body("userid") userid: number,
