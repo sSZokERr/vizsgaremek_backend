@@ -1,15 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import {Injectable} from '@nestjs/common';
 import {InjectRepository} from '@nestjs/typeorm';
-import User from './user.entity';
 import {Repository} from 'typeorm';
-import Image from './img.entity';
-import { Storage } from '@google-cloud/storage';
+import {Storage} from '@google-cloud/storage';
+import User from './Entities/user.entity';
+import Image from './Entities/img.entity';
+import Projects from './Entities/projects.entity';
 
 @Injectable()
 export class AppService {
   constructor(
     @InjectRepository(User) private readonly userRepo: Repository<User>,
     @InjectRepository(Image) private readonly imageRepo: Repository<Image>,
+    @InjectRepository(Projects) private readonly projectsRepo: Repository<Projects>,
     private readonly storage: Storage
   ){}
   async findOne(condition: any): Promise<User> {

@@ -2,18 +2,19 @@ import { RegisterDTO } from './register.dto';
 import { BadRequestException, Body, Controller, Get, HttpCode, NotFoundException, Post, Render, Res} from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { AppService } from './app.service';
-import User from './user.entity';
+import User from './Entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import {  Response, Request } from 'express';
 import { Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common/decorators';
 import { UnauthorizedException } from '@nestjs/common/exceptions';
 import { FileInterceptor } from '@nestjs/platform-express';
-import Image from './img.entity';
+import Image from './Entities/img.entity';
 import * as multer from 'multer'
 import { Storage } from '@google-cloud/storage';
 import { extname } from 'path';
 import { profile } from 'console';
+import Projects from './Entities/projects.entity';
 
 const storage = new Storage({
   projectId: 'vernissage-2e8f8',
@@ -101,6 +102,7 @@ export class AppController {
     }
     const jwt = await this.jwtService.signAsync({
       id: user.id,
+      projectsCount: user.projectsCount
     });
     response.cookie("jwt", jwt, { httpOnly: true });
     return {
@@ -217,5 +219,9 @@ export class AppController {
       const userRepo = this.dataSource.getRepository(User);
       return userRepo.find();
     }
+
+    
   }
 
+  
+  

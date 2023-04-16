@@ -4,9 +4,12 @@ import { MulterModule } from '@nestjs/platform-express';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import User from './user.entity';
-import Image from './img.entity';
 import { Storage } from '@google-cloud/storage';
+import User from './Entities/user.entity';
+import Image from './Entities/img.entity';
+import Projects from './Entities/projects.entity';
+
+
 
 @Module({
   imports: [
@@ -17,12 +20,12 @@ import { Storage } from '@google-cloud/storage';
       password: '',
       database: 'users',
       entities: [
-       User, Image
+       User, Image, Projects
       ],
       synchronize: true,
     }),
     MulterModule.register({dest: '../public'}),
-    TypeOrmModule.forFeature([User, Image]),
+    TypeOrmModule.forFeature([User, Image, Projects]),
     JwtModule.register({
       secret: 'secret',
       signOptions: {expiresIn: '7d'}
