@@ -110,5 +110,16 @@ export class AppService {
     return lastLink;
     }
 
+    async searchUser(searchTerm: string): Promise<User[]> {
+      const users = await this.userRepo
+        // .query(`SELECT id FROM user WHERE (firstName LIKE %${searchTerm}% OR lastName LIKE %${searchTerm}%)`)
+        .createQueryBuilder('user')
+        .where('(user.firstName LIKE :searchTerm OR user.lastName LIKE :searchTerm)', { searchTerm: `%${searchTerm}%` })
+        .getMany();
+        
+      return users;
+    }
+
+    
   }
   

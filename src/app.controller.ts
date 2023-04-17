@@ -6,7 +6,7 @@ import User from './Entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import {  Response, Request } from 'express';
-import { Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common/decorators';
+import { Param, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common/decorators';
 import { UnauthorizedException } from '@nestjs/common/exceptions';
 import { FileInterceptor } from '@nestjs/platform-express';
 import Image from './Entities/img.entity';
@@ -220,6 +220,68 @@ export class AppController {
       return userRepo.find();
     }
 
+    @Get("getProjects")
+    async getProjects(){
+      const projectsRepo = this.dataSource.getRepository(Projects);
+      return projectsRepo.find();
+    }
+
+    @Post("newProject")
+    @UseInterceptors(
+    FileInterceptor("file", {
+      storage: multer.memoryStorage(),
+      limits: {
+        fileSize: 20 * 1024 * 1024, // 20MB
+      },
+      preservePath: true,
+    }))
+    async uploadProject(@UploadedFile() file: Express.Multer.File,
+                        @Body() body: any, 
+                        @Body("projectData") projectData: string,
+                        @Body("userid") userid: number): Promise<{imageUrl: string}>{        
+      try {
+        const fileName = file.originalname + extname(file.originalname);
+        const fileUpload = bucket.file(fileName);
+        const blobStream = fileUpload.createWriteStream({
+          metadata: {
+            contentType: file.mimetype,
+          },
+        });
+        blobStream.on('error', (err) => {
+          console.log(err);
+          throw new Error();
+        });
+        return new Promise((resolve, reject) => {
+          blobStream.on('finish', async () => {
+            const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileUpload.name}`;
+            const imageRepo = this.dataSource.getRepository(Image);
+            const image = new Image();
+            console.log(file.originalname)
+            image.id = parseInt(file.originalname.split('-')[0])
+            image.imageType = parseInt(file.originalname.split('-')[1])
+            image.project = parseInt(file.originalname.split('-')[2])
+            image.positionInProject = parseInt(file.originalname.split('-')[3])
+            image.imageUrl = await this.appService.getLastImageUrl();
+            
+            const projectRepo = this.dataSource.getRepository(Projects);
+            const newProject = new Projects();
+            newProject.userId = userid;
+            newProject.projectData = projectData;
+            projectRepo.save(newProject);
+          });
+          blobStream.end(file.buffer);
+        });
+      } catch (err) {
+        console.log(err);
+        throw new Error(err);
+      }
+    }
+
+    @Get('searchUsers')
+    async searchUsers(@Body('searchTerm') searchTerm: string) {
+    const users = await this.appService.searchUser(searchTerm);
+    return users;
+  }
     
   }
 
