@@ -277,7 +277,7 @@ export class AppController {
       }
     }
 
-    @Get('searchUsers')
+    @Post('searchUsers')
     async searchUsers(@Body('searchTerm') searchTerm: string) {
     const users = await this.appService.searchUser(searchTerm);
     return users;
