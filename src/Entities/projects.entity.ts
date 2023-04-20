@@ -9,6 +9,9 @@ export default class Projects {
     @Column()
     userId: number // melyik userhez tartozik
 
+    @Column()
+    projectTitle: string
+    
     @Column("longtext")
     projectData: string // szovegek a projektben
 }

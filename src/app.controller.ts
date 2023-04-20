@@ -238,7 +238,8 @@ export class AppController {
     async uploadProject(@UploadedFile() file: Express.Multer.File,
                         @Body() body: any, 
                         @Body("projectData") projectData: string,
-                        @Body("userid") userid: number): Promise<{imageUrl: string}>{        
+                        @Body("userid") userid: number,
+                        @Body('projectTitle') projectTitle: string): Promise<{imageUrl: string}>{        
       try {
         const fileName = file.originalname + extname(file.originalname);
         const fileUpload = bucket.file(fileName);
@@ -267,6 +268,7 @@ export class AppController {
             const newProject = new Projects();
             newProject.userId = userid;
             newProject.projectData = projectData;
+            newProject.projectTitle = projectTitle;
             projectRepo.save(newProject);
           });
           blobStream.end(file.buffer);
@@ -277,7 +279,7 @@ export class AppController {
       }
     }
 
-    @Get('searchUsers')
+    @Post('searchUsers')
     async searchUsers(@Body('searchTerm') searchTerm: string) {
     const users = await this.appService.searchUser(searchTerm);
     return users;
