@@ -147,6 +147,7 @@ export class AppController {
             // Ha van profilkepe, akkor appService-ban updateli az uj URL-re
             if(this.appService.hasProfilePicture(image.id, image.imageUrl) && image.imageType === 0){
               imageRepo.update({id: image.id},{imageUrl: image.imageUrl})
+              return { message: "Profile picture updated" }
             }
             imageRepo.save(image) // egyeb irant toltse fel az adatbazisba
             resolve({ imageUrl: publicUrl });
@@ -233,12 +234,16 @@ export class AppController {
                         @Body("projectData") projectData: string,
                         @Body('projectTitle') projectTitle: string){
       try{
+        const userRepo = this.dataSource.getRepository(User)
         const projectRepo = this.dataSource.getRepository(Projects);
         const newProject = new Projects();
         newProject.userId = userid;
         newProject.projectData = projectData;
         newProject.projectTitle = projectTitle;
         projectRepo.save(newProject);
+        const userdata = new User()
+        userdata.projectsCount = await (await this.appService.findOne({id: userid})).projectsCount + 1
+        userRepo.update({id: userid}, {projectsCount: userdata.projectsCount})
         return {
           message: "Upload successful!"
         }
