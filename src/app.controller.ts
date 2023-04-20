@@ -227,53 +227,22 @@ export class AppController {
     }
 
     @Post("newProject")
-    @UseInterceptors(
-    FileInterceptor("file", {
-      storage: multer.memoryStorage(),
-      limits: {
-        fileSize: 20 * 1024 * 1024, // 20MB
-      },
-      preservePath: true,
-    }))
     async uploadProject(@UploadedFile() file: Express.Multer.File,
-                        @Body() body: any, 
-                        @Body("projectData") projectData: string,
                         @Body("userid") userid: number,
-                        @Body('projectTitle') projectTitle: string): Promise<{imageUrl: string}>{        
-      try {
-        const fileName = file.originalname + extname(file.originalname);
-        const fileUpload = bucket.file(fileName);
-        const blobStream = fileUpload.createWriteStream({
-          metadata: {
-            contentType: file.mimetype,
-          },
-        });
-        blobStream.on('error', (err) => {
-          console.log(err);
-          throw new Error();
-        });
-        return new Promise((resolve, reject) => {
-          blobStream.on('finish', async () => {
-            const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileUpload.name}`;
-            const imageRepo = this.dataSource.getRepository(Image);
-            const image = new Image();
-            console.log(file.originalname)
-            image.id = parseInt(file.originalname.split('-')[0])
-            image.imageType = parseInt(file.originalname.split('-')[1])
-            image.project = parseInt(file.originalname.split('-')[2])
-            image.positionInProject = parseInt(file.originalname.split('-')[3])
-            image.imageUrl = await this.appService.getLastImageUrl();
-            
-            const projectRepo = this.dataSource.getRepository(Projects);
-            const newProject = new Projects();
-            newProject.userId = userid;
-            newProject.projectData = projectData;
-            newProject.projectTitle = projectTitle;
-            projectRepo.save(newProject);
-          });
-          blobStream.end(file.buffer);
-        });
-      } catch (err) {
+                        @Body("projectData") projectData: string,
+                        @Body('projectTitle') projectTitle: string){
+      try{
+        const projectRepo = this.dataSource.getRepository(Projects);
+        const newProject = new Projects();
+        newProject.userId = userid;
+        newProject.projectData = projectData;
+        newProject.projectTitle = projectTitle;
+        projectRepo.save(newProject);
+        return {
+          message: "Upload successful!"
+        }
+      }
+        catch (err) {
         console.log(err);
         throw new Error(err);
       }
