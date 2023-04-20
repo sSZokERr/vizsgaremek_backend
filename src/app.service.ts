@@ -66,7 +66,6 @@ export class AppService {
   }
   async hasProfilePicture(id: number, newImageURL: string): Promise<boolean>{
     if(this.imageRepo.query(`SELECT id FROM image WHERE id = ${id};`)){
-      this.imageRepo.update({id: id},{imageUrl: newImageURL})
       return true;
     }
     return false

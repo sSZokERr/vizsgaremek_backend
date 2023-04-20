@@ -144,11 +144,11 @@ export class AppController {
             image.project = parseInt(file.originalname.split('-')[2])
             image.positionInProject = parseInt(file.originalname.split('-')[3])
             image.imageUrl = await this.appService.getLastImageUrl();
-
             // Ha van profilkepe, akkor appService-ban updateli az uj URL-re
-            if(this.appService.hasProfilePicture(image.id, image.imageUrl)){
-              imageRepo.save(image) // egyeb irant toltse fel az adatbazisba
+            if(this.appService.hasProfilePicture(image.id, image.imageUrl) && image.imageType === 0){
+              imageRepo.update({id: image.id},{imageUrl: image.imageUrl})
             }
+            imageRepo.save(image) // egyeb irant toltse fel az adatbazisba
             resolve({ imageUrl: publicUrl });
           });
           blobStream.end(file.buffer);
@@ -172,6 +172,7 @@ export class AppController {
             userid: file.name.split('-')[0],
             url: url,
             imageType: file.name.split('-')[1],
+            projectId: file.name.split('-')[2]
           };
         })
       );
