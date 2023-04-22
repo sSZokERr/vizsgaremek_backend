@@ -261,42 +261,42 @@ export class AppController {
   }
 
   @Post("uploadAndroid")
-async uploadAndroidFile(@Body() body: any, @Body("userid") userid: number,): Promise<{imageUrl: string}> {        
-  try {
-    const base64String = body.image;
-    const buffer = Buffer.from(base64String, "base64");
-    const fileName = userid + "0-0-0"; // Set a filename for the uploaded file
-    const fileUpload = bucket.file(fileName);
-    const blobStream = fileUpload.createWriteStream({
-      metadata: {
-        contentType: "image/jpeg", // Set the content type to JPEG for example
-      },
-    });
-    blobStream.on('error', (err) => {
-      console.log(err);
-      throw new Error();
-    });
-    return new Promise((resolve, reject) => {
-      blobStream.on('finish', async () => {
-        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileUpload.name}`;
-        const imageRepo = this.dataSource.getRepository(Image);
-        const image = new Image();
-        image.id = userid; // Set the ID and other properties as needed
-        image.imageType = 0;
-        image.project = 0;
-        image.positionInProject = 0;
-        image.imageUrl = await this.appService.getLastImageUrl();
-        // Save the image object to the database
-        imageRepo.save(image);
-        resolve({ imageUrl: publicUrl });
+  async uploadAndroidFile(@Body("base64String") base64String: string, @Body("id") userId: number): Promise<{imageUrl: string}> {
+    try {
+      console.log("start");
+      const buffer = Buffer.from(base64String, "base64");
+      const fileName = userId + "-0-0-0"; // Set a filename for the uploaded file
+      const fileUpload = bucket.file(fileName);
+      const blobStream = fileUpload.createWriteStream({
+        metadata: {
+          contentType: "image/jpeg", // Set the content type to JPEG for example
+        },
       });
-      blobStream.end(buffer);
-    });
-  } catch (err) {
-    console.log(err);
-    throw new Error(err);
+      blobStream.on("error", (err) => {
+        console.log(err);
+        throw new Error();
+      });
+      return new Promise((resolve, reject) => {
+        blobStream.on("finish", async () => {
+          const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileUpload.name}`;
+          const imageRepo = this.dataSource.getRepository(Image);
+          const image = new Image();
+          image.id = userId; // Set the ID and other properties as needed
+          image.imageType = 0;
+          image.project = 0;
+          image.positionInProject = 0;
+          image.imageUrl = await this.appService.getLastImageUrl();
+          // Save the image object to the database
+          imageRepo.save(image);
+          resolve({ imageUrl: publicUrl });
+        });
+        blobStream.end(buffer);
+      });
+    } catch (err) {
+      console.log(err);
+      throw new Error(err);
+    }
   }
-}
   }
 
   
