@@ -15,6 +15,8 @@ import { Storage } from '@google-cloud/storage';
 import { extname } from 'path';
 import { profile } from 'console';
 import Projects from './Entities/projects.entity';
+import base64 from 'base64-js';
+
 
 const storage = new Storage({
   projectId: 'vernissage-2e8f8',
@@ -261,13 +263,15 @@ export class AppController {
   }
 
   @Post("uploadAndroid")
-  async uploadAndroidFile(@Body("base64String") base64String: string, @Body("id") userId: number): Promise<{imageUrl: string}> {
+  async uploadAndroidFile(@Body("base64String") base64String: string, @Body("id") userId: number, @Body("imageType")imageType: number, @Body("project")projectCounts:number , @Body("position")position:number): Promise<{imageUrl: string}> {
     try {
       console.log("start");
+      const userdata = new User();
       const buffer = Buffer.from(base64String, "base64");
-      const fileName = userId + "-0-0-0"; // Set a filename for the uploaded file
-      const fileUpload = bucket.file(fileName);
-      const blobStream = fileUpload.createWriteStream({
+      if(projectCounts < 0){
+        const fileName = userId + "-" + imageType + "-0-" + position; // Set a filename for the uploaded file
+        const fileUpload = bucket.file(fileName);
+        const blobStream = fileUpload.createWriteStream({
         metadata: {
           contentType: "image/jpeg", // Set the content type to JPEG for example
         },
@@ -292,12 +296,68 @@ export class AppController {
         });
         blobStream.end(buffer);
       });
-    } catch (err) {
-      console.log(err);
-      throw new Error(err);
+      }else {
+        userdata.projectsCount = await (await this.appService.findOne({id: userId})).projectsCount
+        const fileName = userId + "-" + imageType + "-" + userdata.projectsCount + "-" + position; // Set a filename for the uploaded file
+        const fileUpload = bucket.file(fileName);
+        const blobStream = fileUpload.createWriteStream({
+        metadata: {
+          contentType: "image/jpeg", // Set the content type to JPEG for example
+        },
+      });
+      blobStream.on("error", (err) => {
+        console.log(err);
+        throw new Error();
+      });
+      return new Promise((resolve, reject) => {
+        blobStream.on("finish", async () => {
+          const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileUpload.name}`;
+          const imageRepo = this.dataSource.getRepository(Image);
+          const image = new Image();
+          image.id = userId; // Set the ID and other properties as needed
+          image.imageType = 0;
+          image.project = 0;
+          image.positionInProject = 0;
+          image.imageUrl = await this.appService.getLastImageUrl();
+          // Save the image object to the database
+          imageRepo.save(image);
+          resolve({ imageUrl: publicUrl });
+        });
+        blobStream.end(buffer);
+      });
+    } 
+  }catch (err) {
+    console.log(err);
+    throw new Error(err);
+  }
+      
+      }
+
+
+@Post("newProject")
+    async uploadAndroidProject(@Body("userid") userid: number,
+                              @Body("projectData") projectData: string,
+                              @Body('projectTitle') projectTitle: string){
+      try{
+        const userRepo = this.dataSource.getRepository(User)
+        const projectRepo = this.dataSource.getRepository(Projects);
+        const newProject = new Projects();
+        newProject.userId = userid;
+        newProject.projectData = projectData;
+        newProject.projectTitle = projectTitle;
+        projectRepo.save(newProject);
+        const userdata = new User()
+        userdata.projectsCount = await (await this.appService.findOne({id: userid})).projectsCount + 1
+        userRepo.update({id: userid}, {projectsCount: userdata.projectsCount})
+        return {
+          message: "Upload successful!"
+        }
+      }
+        catch (err) {
+        console.log(err);
+        throw new Error(err);
+      }
     }
-  }
-  }
 
   
-  
+}
