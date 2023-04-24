@@ -20,17 +20,14 @@ projectData:
 titles, description
 
 {
-    "titles":[
-        {"elso cim"},
-        {"masodik cim"},
-        {"harmadik cim"}
-    ],
-    descriptions:[
-        {"elso desc"},
-        {"masodik desc"},
-        {"harmadik desc"}
-    ]
-}
+    "descriptions":
+        ["desc1"],
+        ["desc2"]
+    "titles":
+        ["title1"],
+        ["title2"]
+} 
+
 
 String projectData = {}
 
