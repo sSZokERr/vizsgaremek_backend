@@ -268,7 +268,7 @@ export class AppController {
       console.log("start");
       const userdata = new User();
       const buffer = Buffer.from(base64String, "base64");
-      if(projectCounts < 0){
+      if(projectCounts <= 0){
         const fileName = userId + "-" + imageType + "-0-" + position; // Set a filename for the uploaded file
         const fileUpload = bucket.file(fileName);
         const blobStream = fileUpload.createWriteStream({
@@ -330,15 +330,15 @@ export class AppController {
     console.log(err);
     throw new Error(err);
   }
-      
-      }
+     }
 
 
-@Post("newProject")
+@Post("newProjectAndroid")
     async uploadAndroidProject(@Body("userid") userid: number,
                               @Body("projectData") projectData: string,
                               @Body('projectTitle') projectTitle: string){
       try{
+        console.log("start new project")
         const userRepo = this.dataSource.getRepository(User)
         const projectRepo = this.dataSource.getRepository(Projects);
         const newProject = new Projects();
@@ -347,8 +347,8 @@ export class AppController {
         newProject.projectTitle = projectTitle;
         projectRepo.save(newProject);
         const userdata = new User()
-        userdata.projectsCount = await (await this.appService.findOne({id: userid})).projectsCount + 1
-        userRepo.update({id: userid}, {projectsCount: userdata.projectsCount})
+        userdata.projectsCount = await (await this.appService.findOne({id: newProject.userId})).projectsCount + 1
+        userRepo.update({id: newProject.userId}, {projectsCount: userdata.projectsCount})
         return {
           message: "Upload successful!"
         }
@@ -358,6 +358,4 @@ export class AppController {
         throw new Error(err);
       }
     }
-
-  
 }
