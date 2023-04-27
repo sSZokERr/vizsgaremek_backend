@@ -148,7 +148,7 @@ export class AppController {
             image.imageUrl = await this.appService.getLastImageUrl();
             // Ha van profilkepe, akkor appService-ban updateli az uj URL-re
             if(this.appService.hasProfilePicture(image.id, image.imageUrl) && image.imageType === 0){
-              imageRepo.update({id: image.id},{imageUrl: image.imageUrl})
+              imageRepo.update({id: image.id, imageType: 0},{imageUrl: image.imageUrl})
               return { message: "Profile picture updated" }
             }
             imageRepo.save(image) // egyeb irant toltse fel az adatbazisba
